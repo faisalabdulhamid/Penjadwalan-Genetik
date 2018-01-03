@@ -18,12 +18,12 @@ class CreatePengampusTable extends Migration
             $table->unsignedInteger('matkul_id')->nullable();
             $table->unsignedInteger('dosen_id')->nullable();
             $table->unsignedInteger('kelas_id')->nullable();
-            $table->unsignedInteger('tahun_ajaran_id')->nullable();
+            // $table->unsignedInteger('tahun_ajaran_id')->nullable();
 
             $table->foreign('matkul_id')->references('id')->on('matakuliah')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('dosen_id')->references('id')->on('dosen')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('kelas_id')->references('id')->on('kelas')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreign('tahun_ajaran_id')->references('id')->on('tahun_ajaran')->onUpdate('cascade')->onDelete('cascade');
+            // $table->foreign('tahun_ajaran_id')->references('id')->on('tahun_ajaran')->onUpdate('cascade')->onDelete('cascade');
 //            $table->timestamps();
         });
     }

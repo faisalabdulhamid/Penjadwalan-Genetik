@@ -9,6 +9,8 @@ class Dosen extends Model
     protected $table = 'dosen';
     public $timestamps = false;
 
+    protected $fillable = ['nidn', 'nama'];
+
     public function ketentuan()
     {
         return $this->hasMany(KetentuanDosen::class, 'dosen_id');

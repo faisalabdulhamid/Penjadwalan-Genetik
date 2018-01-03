@@ -12,9 +12,22 @@ class KelasController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Kelas $kelas)
+    public function index(Kelas $kela)
     {
-        return view('kelas.index', compact('kelas'));
+        if (request()->params) {
+            return response()->json($kela->hasPengampu()->wherehas('tahunAjaran', function($q){
+                $q->aktif();
+            })->get());
+        }
+
+        if (!is_null(request()->tahun_ajaran)) {
+            $thn = request()->tahun_ajaran;
+            return response()->json($kela->wherehas('tahunAjaran', function($q) use($thn){
+                $q->where('id', $thn);
+            })->paginate(20));
+        }
+
+        return response()->json($kela->paginate(20));
     }
 
     /**
@@ -37,33 +50,41 @@ class KelasController extends Controller
     {
         $this->validate($request, [
             'kelas' => 'required',
-            'tahun_ajaran' => 'required',
         ]);
-        $kelas = new Kelas();
-        $kelas->kelas = $request->kelas;
-        $kelas->tahun_ajaran_id = $request->tahun_ajaran;
-        $kelas->save();
-        return redirect()->route('kelas.index');
+
+        if ($request->banyak) {
+            for ($i=1; $i <= $request->banyak; $i++) { 
+                Kelas::create(['kelas' => $request->kelas.'-'.$i]);
+            }
+        }else{
+            Kelas::create($request->all());    
+        }
+        
+
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil disimpan',
+        ], 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Kelas  $kelas
+     * @param  \App\Kelas  $kela
      * @return \Illuminate\Http\Response
      */
-    public function show(Kelas $kelas)
+    public function show(Kelas $kela)
     {
-        //
+        return response()->json($kela);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Kelas  $kelas
+     * @param  \App\Kelas  $kela
      * @return \Illuminate\Http\Response
      */
-    public function edit(Kelas $kelas)
+    public function edit(Kelas $kela)
     {
         //
     }
@@ -72,22 +93,37 @@ class KelasController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Kelas  $kelas
+     * @param  \App\Kelas  $kela
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Kelas $kelas)
+    public function update(Request $request, Kelas $kela)
     {
-        //
+        $this->validate($request, [
+            'kelas' => 'required',
+        ]);
+
+        $kela->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil diubah',
+        ], 201);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Kelas  $kelas
+     * @param  \App\Kelas  $kela
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Kelas $kelas)
+    public function destroy(Kelas $kela)
     {
-        //
+        $kela->delete();
+        
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil dihapus',
+            'kelas' => $kela,
+        ], 201);
     }
 }

@@ -12,11 +12,11 @@
 */
 
 Route::get('/', function () {
-    return redirect()->route('dosen.index');
+    return view('layouts.app');
 });
 
 Route::resource('dosen', 'DosenController');
-Route::resource('matkul', 'MatakuliahController');
+Route::resource('matakuliah', 'MatakuliahController');
 Route::resource('hari', 'HariController');
 Route::resource('jam', 'JamController');
 Route::resource('kelas', 'KelasController');
@@ -31,6 +31,5 @@ Route::resource('ketentuan-matkul', 'KetentuanMatkulController');
 Route::group(['prefix'=>'penjadwalan'], function(){
     Route::get('/', 'PenjadwalanController@index')->name('penjadwalan.index');
     Route::post('/genetika', 'PenjadwalanController@penjadwalan')->name('penjadwalan.post');
+    Route::get('/contoh', 'PenjadwalanController@contoh');
 });
-
-

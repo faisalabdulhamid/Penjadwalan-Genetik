@@ -14,7 +14,10 @@ class HariController extends Controller
      */
     public function index(Hari $hari)
     {
-        return view('hari.index', compact('hari'));
+        if (request()->params) {
+            return response()->json($hari->all());
+        }
+        return response()->json($hari->paginate(10));
     }
 
     /**
@@ -38,10 +41,13 @@ class HariController extends Controller
         $this->validate($request, [
             'nama' => 'required|unique:hari'
         ]);
-        $hari = new Hari();
-        $hari->nama = $request->nama;
-        $hari->save();
-        return redirect()->route('hari.index');
+
+        Hari::create($request->all());
+
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Data Berhasil disimpan',
+        ], 201);
     }
 
     /**
@@ -52,7 +58,7 @@ class HariController extends Controller
      */
     public function show(Hari $hari)
     {
-        //
+        return response()->json($hari);
     }
 
     /**
@@ -75,7 +81,16 @@ class HariController extends Controller
      */
     public function update(Request $request, Hari $hari)
     {
-        //
+        $this->validate($request, [
+            'nama' => 'required|unique:hari'
+        ]);
+
+        $hari->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Data Berhasil diubah',
+        ], 201);
     }
 
     /**
@@ -86,6 +101,11 @@ class HariController extends Controller
      */
     public function destroy(Hari $hari)
     {
-        //
+        $hari->delete();
+        
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Data Berhasil di hapus',
+        ], 201);
     }
 }

@@ -14,7 +14,8 @@ class KetentuanMatkulController extends Controller
      */
     public function index(KetentuanMatkul $ketentuan)
     {
-        return view('ketentuan-matkul.index', compact('ketentuan'));
+
+        return response()->json($ketentuan->all());
     }
 
     /**
@@ -36,16 +37,17 @@ class KetentuanMatkulController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'matkul' => 'required',
-            'ruangan' => 'required',
+            'matkul_id' => 'required',
+            'ruangan_id' => 'required',
         ]);
 
-        $ketentuan = new KetentuanMatkul();
-        $ketentuan->matkul_id = $request->matkul;
-        $ketentuan->ruangan_id = $request->ruangan;
-        $ketentuan->save();
+        KetentuanMatkul::updateOrCreate($request->all());
 
-        return redirect()->route('ketentuan-matkul.index');
+        return response()
+            ->json([
+                'title' => 'Saved!',
+                'message' => 'Berhasil disimpan'
+            ], 201);
     }
 
     /**
@@ -56,7 +58,7 @@ class KetentuanMatkulController extends Controller
      */
     public function show(KetentuanMatkul $ketentuanMatkul)
     {
-        //
+        return response()->json($ketentuanMatkul);
     }
 
     /**
@@ -67,7 +69,7 @@ class KetentuanMatkulController extends Controller
      */
     public function edit(KetentuanMatkul $ketentuanMatkul)
     {
-        //
+        
     }
 
     /**
@@ -79,7 +81,18 @@ class KetentuanMatkulController extends Controller
      */
     public function update(Request $request, KetentuanMatkul $ketentuanMatkul)
     {
-        //
+        $this->validate($request, [
+            'matkul_id' => 'required',
+            'ruangan_id' => 'required',
+        ]);
+
+        $ketentuanMatkul->update($request->all());
+
+        return response()
+            ->json([
+                'title' => 'Updated!',
+                'message' => 'Berhasil diubah'
+            ], 201);
     }
 
     /**
@@ -90,6 +103,11 @@ class KetentuanMatkulController extends Controller
      */
     public function destroy(KetentuanMatkul $ketentuanMatkul)
     {
-        //
+        $ketentuanMatkul->delete();
+
+        return response()->json([
+                        'title' => 'Deleted!',
+                        'message' => 'Berhasil dihapus'
+                    ], 201);
     }
 }

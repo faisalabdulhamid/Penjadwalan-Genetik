@@ -14,7 +14,11 @@ class RuanganController extends Controller
      */
     public function index(Ruangan $ruangan)
     {
-        return view('ruangan.index', compact('ruangan'));
+        if (request()->params) {
+            return response()->json($ruangan->all());
+        }
+        
+        return response()->json($ruangan->paginate(15));
     }
 
     /**
@@ -41,12 +45,12 @@ class RuanganController extends Controller
             'jenis' => 'required'
         ]);
 
-        $ruangan = new Ruangan();
-        $ruangan->nama = $request->nama;
-        $ruangan->kapasitas = $request->kapasitas;
-        $ruangan->jenis = $request->jenis;
-        $ruangan->save();
-        return redirect()->route('ruangan.index');
+        Ruangan::create($request->all());
+
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil disimpan',
+        ], 201);
     }
 
     /**
@@ -57,7 +61,7 @@ class RuanganController extends Controller
      */
     public function show(Ruangan $ruangan)
     {
-        //
+        return response()->json($ruangan);
     }
 
     /**
@@ -80,7 +84,17 @@ class RuanganController extends Controller
      */
     public function update(Request $request, Ruangan $ruangan)
     {
-        //
+        $this->validate($request, [
+            'nama' => 'required',
+            'kapasitas' => 'numeric',
+            'jenis' => 'required'
+        ]);
+
+        $ruangan->update($request->all());
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil disimpan',
+        ], 201);
     }
 
     /**
@@ -91,6 +105,11 @@ class RuanganController extends Controller
      */
     public function destroy(Ruangan $ruangan)
     {
-        //
+        $ruangan->delete();
+
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil dihapus',
+        ], 201);
     }
 }

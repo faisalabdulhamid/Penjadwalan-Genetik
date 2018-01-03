@@ -12,9 +12,12 @@ class MatakuliahController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Matakuliah $matkul)
+    public function index(Matakuliah $matakuliah)
     {
-        return view('matkul.index', compact('matkul'));
+        if (request()->params) {
+            return response()->json($matakuliah->orderBy('semester')->orderBy('id')->get());
+        }
+        return response()->json($matakuliah->orderBy('semester')->orderBy('id')->paginate(20));
     }
 
     /**
@@ -43,14 +46,12 @@ class MatakuliahController extends Controller
             'jenis' => 'required',
         ]);
 
-        $matkul = new Matakuliah();
-        $matkul->kode_mk = $request->kode_mk;
-        $matkul->nama = $request->nama;
-        $matkul->sks = $request->sks;
-        $matkul->semester = $request->semester;
-        $matkul->jenis = $request->jenis;
-        $matkul->save();
-        return redirect()->route('matkul.index');
+        Matakuliah::create($request->all());
+        
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil disimpan'
+        ], 201);
     }
 
     /**
@@ -61,7 +62,7 @@ class MatakuliahController extends Controller
      */
     public function show(Matakuliah $matakuliah)
     {
-        //
+        return response()->json($matakuliah);
     }
 
     /**
@@ -83,7 +84,7 @@ class MatakuliahController extends Controller
      * @param  \App\Matakuliah  $matakuliah
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Matakuliah $matkul)
+    public function update(Request $request, Matakuliah $matakuliah)
     {
         $this->validate($request, [
             'kode_mk' => 'required',
@@ -92,13 +93,13 @@ class MatakuliahController extends Controller
             'semester' => 'required',
             'jenis' => 'required',
         ]);
-        $matkul->kode_mk = $request->kode_mk;
-        $matkul->nama = $request->nama;
-        $matkul->sks = $request->sks;
-        $matkul->semester = $request->semester;
-        $matkul->jenis = $request->jenis;
-        $matkul->save();
-        return redirect()->route('matkul.index');
+
+        $matakuliah->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil diubah'
+        ], 201);
     }
 
     /**
@@ -109,7 +110,11 @@ class MatakuliahController extends Controller
      */
     public function destroy(Matakuliah $matakuliah)
     {
-        $matakuliah->destroy();
-        return redirect()->route('matkul.index');
+        $matakuliah->delete();
+        
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil dihapus'
+        ], 201);
     }
 }

@@ -17,7 +17,10 @@ class DosenController extends Controller
      */
     public function index(Dosen $dosen)
     {
-        return view('dosen.index', compact('dosen'));
+        if (request()->params) {
+            return response()->json($dosen->orderBy('nama')->get());
+        }
+        return $dosen->paginate(15);
     }
 
     /**
@@ -43,24 +46,12 @@ class DosenController extends Controller
             'nama' => 'required'
         ]);
 
-        $dosen = new Dosen();
-        $dosen->nidn = $request->nidn;
-        $dosen->nama = $request->nama;
-        $dosen->save();
+        Dosen::create($request->all());
 
-        foreach(Hari::all() as $hari){
-            foreach(Jam::all() as $jam){
-                $ketentuan = new KetentuanDosen();
-                $ketentuan->bobot_fitness = 5;
-                $ketentuan->dosen_id = $dosen->id;
-                $ketentuan->hari_id = $hari->id;
-                $ketentuan->jam_id = $jam->id;
-                $ketentuan->save();
-            }
-        }
-//        $dosen->attach();
-
-        return redirect()->route('dosen.index');
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Data Berhasil disimpan'
+        ], 201);
     }
 
     /**
@@ -71,7 +62,7 @@ class DosenController extends Controller
      */
     public function show(Dosen $dosen)
     {
-        //
+        return response()->json($dosen);
     }
 
     /**
@@ -99,11 +90,13 @@ class DosenController extends Controller
             'nidn' => 'required',
             'nama' => 'required'
         ]);
+        
+        $dosen->update($request->all());
 
-        $dosen->nidn = $request->nidn;
-        $dosen->nama = $request->nama;
-        $dosen->save();
-        return redirect()->route('dosen.index');
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Data Berhasil diubah'
+        ], 201);
     }
 
     /**
@@ -114,7 +107,11 @@ class DosenController extends Controller
      */
     public function destroy(Dosen $dosen)
     {
-        $dosen->destroy();
-        return redirect()->route('dosen.index');
+        $dosen->delete();
+        
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Data Berhasil Dihapus'
+        ], 201);
     }
 }

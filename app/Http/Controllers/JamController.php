@@ -14,7 +14,10 @@ class JamController extends Controller
      */
     public function index(Jam $jam)
     {
-        return view('jam.index', compact('jam'));
+        if (request()->params) {
+            return response()->json($jam->all());
+        }
+        return response()->json($jam->paginate(20));
     }
 
     /**
@@ -39,10 +42,12 @@ class JamController extends Controller
             'range_jam' => 'required|unique:jam'
         ]);
 
-        $jam = new Jam();
-        $jam->range_jam = $request->range_jam;
-        $jam->save();
-        return redirect()->route('jam.index');
+        Jam::create($request->all());
+
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil disimpan',
+        ], 201);
     }
 
     /**
@@ -53,7 +58,7 @@ class JamController extends Controller
      */
     public function show(Jam $jam)
     {
-        //
+        return response()->json($jam);
     }
 
     /**
@@ -80,9 +85,12 @@ class JamController extends Controller
             'range_jam' => 'required'
         ]);
 
-        $jam->range_jam = $request->range_jam;
-        $jam->save();
-        return redirect()->route('jam.index');
+        $jam->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil ubah',
+        ], 201);
     }
 
     /**
@@ -93,6 +101,11 @@ class JamController extends Controller
      */
     public function destroy(Jam $jam)
     {
-        //
+        $jam->delete();
+        
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil dihapus',
+        ], 201);
     }
 }

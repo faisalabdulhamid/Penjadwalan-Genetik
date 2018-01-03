@@ -14,7 +14,17 @@ class PengampuController extends Controller
      */
     public function index(Pengampu $pengampu)
     {
-        return view('pengampu.index', compact('pengampu'));
+        if (request()->tahun_ajaran) {
+            $thn = request()->tahun_ajaran;
+            $pengampu = $pengampu->whereHas('kelas.tahunAjaran', function($q) use($thn){
+                $q->where('id', $thn);
+            })->with(['matkul', 'dosen', 'kelas'])->paginate(20);
+            return response()->json($pengampu);    
+        }
+        $pengampu = $pengampu->whereHas('kelas.tahunAjaran', function($q){
+            $q->aktif();
+        })->with(['matkul', 'dosen', 'kelas'])->paginate(20);
+        return response()->json($pengampu);
     }
 
     /**
@@ -36,21 +46,18 @@ class PengampuController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'matakuliah' => 'required',
-            'dosen' => 'required',
-            'kelas' => 'required',
-            'tahun_akademik' => 'required',
+            'matkul_id' => 'required',
+            'dosen_id' => 'required',
+            'kelas_id' => 'required',
+            // 'tahun_akademik' => 'required',
         ]);
 
-        $pengampu = new Pengampu();
-        $pengampu->matkul_id = $request->matakuliah;
-        $pengampu->dosen_id = $request->dosen;
-        $pengampu->kelas_id = $request->kelas;
-        $pengampu->tahun_ajaran_id = $request->tahun_akademik;
-        $pengampu->save();
+        Pengampu::updateOrCreate($request->all());
 
-        return redirect()->back();
-            //->route('pengampu.index');
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil disimpan',
+        ], 201);
     }
 
     /**
@@ -61,7 +68,7 @@ class PengampuController extends Controller
      */
     public function show(Pengampu $pengampu)
     {
-        //
+        return response()->json($pengampu);
     }
 
     /**
@@ -84,7 +91,19 @@ class PengampuController extends Controller
      */
     public function update(Request $request, Pengampu $pengampu)
     {
-        //
+        $this->validate($request, [
+            'matkul_id' => 'required',
+            'dosen_id' => 'required',
+            'kelas_id' => 'required',
+            // 'tahun_akademik' => 'required',
+        ]);
+
+        $pengampu->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil diubah',
+        ], 201);
     }
 
     /**
@@ -95,6 +114,11 @@ class PengampuController extends Controller
      */
     public function destroy(Pengampu $pengampu)
     {
-        //
+        $pengampu->delete();
+
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil dihapus',
+        ], 201);
     }
 }

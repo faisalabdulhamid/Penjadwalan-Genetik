@@ -14,7 +14,8 @@ class KetentuanRuanganController extends Controller
      */
     public function index(KetentuanRuangan $ketentuan)
     {
-        return view('ketentuan-ruangan.index', compact('ketentuan'));
+
+        return response()->json($ketentuan->all());
     }
 
     /**
@@ -24,7 +25,7 @@ class KetentuanRuanganController extends Controller
      */
     public function create()
     {
-        return view('ketentuan-ruangan.create');
+        
     }
 
     /**
@@ -36,16 +37,16 @@ class KetentuanRuanganController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'ruangan' => 'required',
-            'hari' => 'required',
+            'ruangan_id' => 'required',
+            'hari_id' => 'required',
         ]);
 
-        $ketentuan = new KetentuanRuangan();
-        $ketentuan->ruangan_id = $request->ruangan;
-        $ketentuan->hari_id = $request->hari;
-        $ketentuan->save();
+        KetentuanRuangan::updateOrCreate($request->all());
 
-        return redirect()->route('ketentuan-ruangan.index');
+        return response()->json([
+                    'title' => 'Saved!',
+                    'message' => 'Berhasil ditambahkan'
+                ], 201);
     }
 
     /**
@@ -56,7 +57,7 @@ class KetentuanRuanganController extends Controller
      */
     public function show(KetentuanRuangan $ketentuanRuangan)
     {
-        //
+        return response()->json($ketentuanRuangan);
     }
 
     /**
@@ -79,7 +80,17 @@ class KetentuanRuanganController extends Controller
      */
     public function update(Request $request, KetentuanRuangan $ketentuanRuangan)
     {
-        //
+        $this->validate($request, [
+            'ruangan_id' => 'required',
+            'hari_id' => 'required',
+        ]);
+
+        $ketentuanRuangan->update($request->all());
+
+        return response()->json([
+                    'title' => 'Updated!',
+                    'message' => 'Berhasil diubah'
+                ], 201);
     }
 
     /**
@@ -90,6 +101,10 @@ class KetentuanRuanganController extends Controller
      */
     public function destroy(KetentuanRuangan $ketentuanRuangan)
     {
-        //
+        $ketentuanRuangan->delete();
+        return response()->json([
+                        'title' => 'Deleted!',
+                        'message' => 'Berhasil dihapus'
+                    ], 201);
     }
 }

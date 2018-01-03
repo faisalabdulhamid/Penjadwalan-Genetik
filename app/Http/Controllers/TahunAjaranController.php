@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\TahunAjaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TahunAjaranController extends Controller
 {
@@ -14,7 +15,10 @@ class TahunAjaranController extends Controller
      */
     public function index(TahunAjaran $tahun_ajaran)
     {
-        return view('tahun-ajaran.index', compact('tahun_ajaran'));
+        if (request()->tahun) {
+            return response()->json($tahun_ajaran->all());
+        }
+        return response()->json($tahun_ajaran->paginate(10));
     }
 
     /**
@@ -39,10 +43,12 @@ class TahunAjaranController extends Controller
             'tahun_ajaran' => 'required|unique:tahun_ajaran',
         ]);
 
-        $tahun = new TahunAjaran();
-        $tahun->tahun_ajaran = $request->tahun_ajaran;
-        $tahun->save();
-        return redirect()->route('tahun-ajaran.index');
+        TahunAjaran::create($request->all());
+
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil Disimpan'
+        ], 201);
     }
 
     /**
@@ -53,7 +59,7 @@ class TahunAjaranController extends Controller
      */
     public function show(TahunAjaran $tahunAjaran)
     {
-        //
+        return response()->json($tahunAjaran);
     }
 
     /**
@@ -64,7 +70,18 @@ class TahunAjaranController extends Controller
      */
     public function edit(TahunAjaran $tahunAjaran)
     {
-        //
+        $id = $tahunAjaran->id;
+        
+        DB::table('tahun_ajaran')->where('aktif', '=', 1)->update(['aktif' => null]);
+
+        $th = TahunAjaran::find($id);
+        $th->aktif = 1;
+        $th->save();
+
+        return response()->json([
+            'title' => 'Checked!',
+            'message' => 'Berhasil diubah',
+        ], 201);
     }
 
     /**
@@ -76,7 +93,16 @@ class TahunAjaranController extends Controller
      */
     public function update(Request $request, TahunAjaran $tahunAjaran)
     {
-        //
+        $this->validate($request, [
+            'tahun_ajaran' => 'required',
+        ]);
+
+        $tahunAjaran->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil diubah'
+        ], 201);
     }
 
     /**
@@ -87,6 +113,10 @@ class TahunAjaranController extends Controller
      */
     public function destroy(TahunAjaran $tahunAjaran)
     {
-        //
+        $tahunAjaran->delete();
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil Dihapus'
+        ], 201);
     }
 }

@@ -9,6 +9,8 @@ class KetentuanMatkul extends Model
     protected $table = 'ketentuan_matkul';
     public $timestamps = false;
 
+    protected $fillable = ['matkul_id', 'ruangan_id'];
+
     public function matkul()
     {
         return $this->belongsTo(Matakuliah::class, 'matkul_id');

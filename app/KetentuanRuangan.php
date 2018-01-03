@@ -9,6 +9,8 @@ class KetentuanRuangan extends Model
     protected $table = 'ketentuan_ruangan';
     public $timestamps = false;
 
+    protected $fillable = ['ruangan_id', 'hari_id'];
+    
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class, 'ruangan_id');

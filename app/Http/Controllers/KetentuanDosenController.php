@@ -15,8 +15,11 @@ class KetentuanDosenController extends Controller
      */
     public function index()
     {
-        $dosen = Dosen::first();
-        return view('ketentuan-dosen.index', compact('dosen'));
+        if (request()->dosen) {
+            $id = request()->dosen;
+            $ketentuan = KetentuanDosen::where('dosen_id', $id)->get();
+            return response()->json($ketentuan);
+        }
     }
 
     /**
@@ -37,40 +40,18 @@ class KetentuanDosenController extends Controller
      */
     public function store(Request $request)
     {
-        $dosen_id = $request->dosen;;
+        $this->validate($request, [
+            'hari_id' => 'required',
+            'jam_id' => 'required',
+            'dosen_id' => 'required',
+        ]);
 
-//        $dest = Dosen::find($dosen_id);
-        KetentuanDosen::where('dosen_id', $dosen_id)->delete();
+        KetentuanDosen::create($request->all());
 
-        $data = [];
-        foreach($request->ketentuan as $hari_id => $value)
-        {
-
-            $row = [];
-//            $row['value'] = $value;//hari
-            foreach($value as $jam_id => $bobot)
-            {
-
-                if(intval($bobot) <> 1)
-                {
-//                    $row[$hari_id][$jam_id]['hari_id'] = $hari_id;//hari
-//                    $row[$hari_id][$jam_id]['jam_id'] = $jam_id;//jam
-//                    $row[$hari_id][$jam_id]['bobot'] = $bobot;//jam
-                    $ketentuan = new KetentuanDosen();
-                    $ketentuan->dosen_id = $dosen_id;
-                    $ketentuan->hari_id = $hari_id;
-                    $ketentuan->jam_id = $jam_id;
-                    $ketentuan->bobot_fitness = $bobot;
-                    $ketentuan->save();
-                }
-//                $row['hari'][$key2] = $key;
-//                $row['jam'][$key2] = $value2;
-            }
-            $data[] = $row;
-        }
-//        return $data;
-
-        return redirect()->back();
+        return response()->json([
+            'title' => 'Saved!',
+            'message' => 'Berhasil disimpan'
+        ], 201);
     }
 
     /**
@@ -105,7 +86,19 @@ class KetentuanDosenController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $this->validate($request, [
+            'hari_id' => 'required',
+            'jam_id' => 'required',
+            'dosen_id' => 'required',
+        ]);
+
+        $ketentuan = KetentuanDosen::find($id);
+        $ketentuan->update($request->all());
+
+        return response()->json([
+            'title' => 'Updated!',
+            'message' => 'Berhasil diubah'
+        ], 201);
     }
 
     /**
@@ -116,6 +109,12 @@ class KetentuanDosenController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $ketentuan = KetentuanDosen::find($id);
+        $ketentuan->delete();
+
+        return response()->json([
+            'title' => 'Deleted!',
+            'message' => 'Berhasil dihapus'
+        ], 201);
     }
 }

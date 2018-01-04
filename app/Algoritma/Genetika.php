@@ -253,7 +253,7 @@ class Genetika
 
     public function Seleksi()
     {
-        // $this->fitness->max
+        $this->fitness->max
     }
 
 }

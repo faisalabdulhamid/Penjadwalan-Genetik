@@ -15,4 +15,9 @@ class Matakuliah extends Model
     {
         return $this->hasMany(KetentuanMatkul::class, 'matkul_id');
     }
+
+    public function pengampu()
+    {
+    	return $this->hasMany(Pengampu::class, 'matkul_id');
+    }
 }

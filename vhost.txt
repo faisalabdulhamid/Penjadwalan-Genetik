@@ -1,0 +1,15 @@
+<VirtualHost *:80>
+    ServerAdmin admin@penjadwalan.laravel
+    DocumentRoot "D:/PROJECT/LARAVEL/Penjadwalan-Genetik-Tabu-Search/public"
+    ServerName penjadwalan.laravel
+    ServerAlias www.penjadwalan.laravel
+    ErrorLog logs/penjadwalan.laravel.log
+    CustomLog logs/penjadwalan.laravel.log combined
+    <Directory "D:/PROJECT/LARAVEL/Penjadwalan-Genetik-Tabu-Search">
+        Options Indexes FollowSymLinks MultiViews
+		AllowOverride all
+		Order Deny,Allow
+		Allow from all
+		Require all granted
+    </Directory>
+</VirtualHost>

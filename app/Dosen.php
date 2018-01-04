@@ -15,4 +15,9 @@ class Dosen extends Model
     {
         return $this->hasMany(KetentuanDosen::class, 'dosen_id');
     }
+
+    public function pengampu()
+    {
+    	return $this->hasMany(Pengampu::class, 'dosen_id');
+    }
 }

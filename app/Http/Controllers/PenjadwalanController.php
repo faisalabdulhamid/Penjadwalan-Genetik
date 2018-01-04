@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Algoritma\Genetika;
+use App\Dosen;
 use App\Hari;
 use App\Jam;
-use App\Kelas;
 use App\KetentuanDosen;
 use App\KetentuanMatkul;
 use App\KetentuanRuangan;
 use App\Pengampu;
 use App\Ruangan;
-use App\TahunAjaran;
 use Illuminate\Http\Request;
 
 class PenjadwalanController extends Controller
@@ -41,10 +40,22 @@ class PenjadwalanController extends Controller
         // return $genetika;
     }
 
+        //Pengkodean
+
+        // echo $genetika->mutasi;
+        // TahunAjaran::find($tahun_akademik);
+        //[$kelas, $dosen, $matkul, $hari, $jam, $ruangan]
+        // KROMOSOM = [gen, gen, gen, gen ...]
+        // KROMOSOM = [$perkuliahan, $hari, $jam, $ruangan]
+
+        // $perkuliahaan = [$id, $dosen, $matkul, $kelas] ---> pengampu
+        // $jadwal = [$hari, $jam, $ruangan]
+
+        // $Kromosom = [$jadwal, $perkuliahan]
+
     public function contoh()
     {
         $semester = 2;
-        // $tahun_akademik = 1;
         $populasi = 10;
         $crossover = 0.7;
         $mutasi = 0.4;
@@ -52,31 +63,23 @@ class PenjadwalanController extends Controller
 
         $genetika = new Genetika($mutasi, $crossover, $populasi);
 
-        //Pengkodean
+        $genetika->Pengkodean();
+        $genetika->Inisialisasi();
+        $genetika->EvaluasiFitness();
+        // $max = $genetika->fitness->max('fitness');
 
-        // echo $genetika->mutasi;
-        // TahunAjaran::find($tahun_akademik);
-        //[$kelas, $dosen, $matkul, $hari, $jam, $ruangan]
-        $kelas = Kelas::has('tahunAjaran')->whereHas('tahunAjaran', function($query){
-            $query->aktif();
-        })->get();
+        return $genetika->individu;
 
-        $pengampu = Pengampu::whereHas('kelas.tahunAjaran', function($q){
-            $q->aktif();
-        })->get();
 
-        $jam = Jam::all();
+        // return collect([$genetika->fitness])->firstWhere('fitness', $max);
+        
 
-        $hari = Hari::all();
+        
 
-        $ruangan_teori = Ruangan::where('jenis', 'TEORI')->get();
-        $ruangan_praktikum = Ruangan::where('jenis', 'LABORATORIUM')->get();
+        // dd($genetika->individu);
+        // return $genetika->hitungFitness();
 
-        $ketentuan_dosen = KetentuanDosen::all();
-        $ketentuan_matkul = KetentuanMatkul::all();
-        $ketentuan_ruangan = KetentuanRuangan::all();
-
-        return $ketentuan_ruangan;
+        // return $search->all();
     }
 
 }

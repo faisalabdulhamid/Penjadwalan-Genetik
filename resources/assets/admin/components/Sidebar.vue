@@ -3,7 +3,10 @@
 
 		<a href="" class="nav-header"><i class="fa fa-th-list"></i> Beranda</a>
 		<a class="nav-header" ><i class="fa fa-database"></i> Data </a>
-		<ul id="content-menu" class="nav nav-list collapse in">                        
+		<ul id="content-menu" class="nav nav-list collapse in">
+			<li v-bind:class="{'active': $route.meta.menu == 'tahun-ajaran'}">
+				<router-link :to="{ name:'tahun-ajaran-index' }"><i class="fa fa-list-alt"></i> Tahun Ajaran</router-link>
+			</li>                        
 			<li v-bind:class="{'active': $route.meta.menu == 'dosen'}">
 				<router-link :to="{ name:'dosen-index' }"><i class="fa fa-user"></i> Dosen</router-link>
 			</li>
@@ -22,11 +25,6 @@
 			<li v-bind:class="{'active': $route.meta.menu == 'hari'}">
 				<router-link :to="{ name:'hari-index' }"><i class="fa fa-calendar"></i> Hari</router-link>
 			</li>
-
-			<li v-bind:class="{'active': $route.meta.menu == 'tahun-ajaran'}">
-				<router-link :to="{ name:'tahun-ajaran-index' }"><i class="fa fa-list-alt"></i> Tahun Ajaran</router-link>
-			</li>
-
 			<li v-bind:class="{'active': $route.meta.menu == 'pengampu'}">
 				<router-link :to="{ name:'pengampu-index' }"><i class="fa fa-file-text"></i> Pengampu</router-link>
 			</li>

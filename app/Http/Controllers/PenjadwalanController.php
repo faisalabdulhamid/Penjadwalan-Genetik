@@ -68,7 +68,7 @@ class PenjadwalanController extends Controller
         $genetika->EvaluasiFitness();
         // $max = $genetika->fitness->max('fitness');
 
-        return $genetika->individu;
+        return $genetika->fitness;
 
 
         // return collect([$genetika->fitness])->firstWhere('fitness', $max);

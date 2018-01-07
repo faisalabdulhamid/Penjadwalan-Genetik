@@ -11,21 +11,25 @@ class Individu
 	public $dosen;
 	public $matkul;
 	public $kelas;
+	
 	public $hari;
 	public $jam;
 	public $ruangan;
+
 	public $sks; //--> Tambahan
+	public $jenis; //--> Tambahan
 	
-	function __construct(array $params)
+	function __construct($params)
 	{
-		$this->perkuliahan = $params['perkuliahan'];
-		$this->dosen = $params['dosen'];
-		$this->matkul = $params['matkul'];
-		$this->kelas = $params['kelas'];
-		$this->hari = $params['hari'];
-		$this->jam = $params['jam'];
-		$this->ruangan = $params['ruangan'];
-		$this->sks = $params['sks'];
+		$this->perkuliahan = $params->perkuliahan;//['perkuliahan'];
+		$this->dosen = $params->dosen;//['dosen'];
+		$this->matkul = $params->matkul;//['matkul'];
+		$this->kelas = $params->kelas;//['kelas'];
+		$this->hari = $params->hari;//['hari'];
+		$this->jam = $params->jam;//['jam'];
+		$this->ruangan = $params->ruangan;//['ruangan'];
+		$this->sks = $params->sks;//['sks'];
+		$this->jenis = $params->jenis;//['sks'];
 	}
 
 }

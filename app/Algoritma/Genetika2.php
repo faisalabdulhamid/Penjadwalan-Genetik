@@ -363,7 +363,7 @@ class Genetika
 
                         $penalty += 1;
                     }
-                }
+                } 
 
 
                 if ($sks == 2)

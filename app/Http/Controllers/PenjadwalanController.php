@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Algoritma\Genetika;
+use App\Algoritma\TabuList;
+use App\Algoritma\Individu;
 use App\Dosen;
 use App\Hari;
 use App\Jam;
@@ -31,27 +33,11 @@ class PenjadwalanController extends Controller
         $crossover = $request->crossover;
         $mutasi = $request->mutasi;
         $generasi = $request->generasi;
-
-        
-
         //params($jenis_semester, $tahun_akademik, $populasi, $crossOver, $mutasi, $kode_jumat, $range_jumat, $kode_dhuhur)
         $genetika = new Genetika();
 
         // return $genetika;
     }
-
-        //Pengkodean
-
-        // echo $genetika->mutasi;
-        // TahunAjaran::find($tahun_akademik);
-        //[$kelas, $dosen, $matkul, $hari, $jam, $ruangan]
-        // KROMOSOM = [gen, gen, gen, gen ...]
-        // KROMOSOM = [$perkuliahan, $hari, $jam, $ruangan]
-
-        // $perkuliahaan = [$id, $dosen, $matkul, $kelas] ---> pengampu
-        // $jadwal = [$hari, $jam, $ruangan]
-
-        // $Kromosom = [$jadwal, $perkuliahan]
 
     public function contoh()
     {
@@ -62,24 +48,50 @@ class PenjadwalanController extends Controller
         $generasi = 100; //pengulangan
 
         $genetika = new Genetika($mutasi, $crossover, $populasi);
+        
+        $fit = [];
+        $fitness_1 = '';
+        $found = false;
 
         $genetika->Pengkodean();
         $genetika->Inisialisasi();
         $genetika->EvaluasiFitness();
-        // $max = $genetika->fitness->max('fitness');
+        $genetika->Seleksi();
+        return($genetika->CrossOver());
+        // $genetika->Mutasi();
+        return ($genetika->tabu_list->tabu_individu);
+        dd($genetika->tabu_list);
 
-        return $genetika->fitness;
+        for ($i=0; $i < $generasi; $i++) { 
+            
+            $genetika->EvaluasiFitness();
+            $genetika->Seleksi();
+            $genetika->CrossOver();
+            $genetika->Mutasi();
+            $genetika->EvaluasiFitness();
 
+            $fit[] = $genetika->fitness->max('fitness');
+            $fitness = $genetika->fitness;
 
-        // return collect([$genetika->fitness])->firstWhere('fitness', $max);
-        
+            if ($fitness->max('fitness') === 1) {
+                $found = true;
+                $fitness_1 = [
+                    $i,
+                    $fitness
+                ];
+            }
 
-        
+            if($found){break;}
+        }
 
-        // dd($genetika->individu);
-        // return $genetika->hitungFitness();
-
-        // return $search->all();
+        if ($found) {
+            return [
+                $genetika->tabu_list,
+                $fitness_1,
+                $fit];
+        }else{
+            return $fit;
+        }
     }
 
 }

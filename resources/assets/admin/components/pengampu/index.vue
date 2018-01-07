@@ -66,7 +66,8 @@
 				url: `${base_url}/${url}`,
 				tahun: [],
 				param: {
-					tahun_ajaran: null
+					tahun_ajaran: null,
+					page: 1
 				}
 			}
 		},
@@ -74,8 +75,7 @@
 			getdata(){
 				let self = this
 				return new Promise((resolve, reject) => {
-					let params = (self.param.tahun_ajaran)? `?tahun_ajaran=${self.param.tahun_ajaran}`: ''
-					self.$http.get(`${self.url}${params}`)
+					self.$http.get(`${self.url}`, {params: self.param})
 						.then(res => {
 							resolve(res.data)
 						}).catch(e => {
@@ -84,22 +84,30 @@
 				})
 			},
 			prev(){
-				this.url = this.table.prev_page_url
-				let self = this
-				let params = (self.param.tahun_ajaran)? `?tahun_ajaran=${self.param.tahun_ajaran}`: ''
-				self.$http.get(`${self.url}${params}`)
-					.then(res => {
-						Vue.set(self.$data, 'table', res.data)
-					})
+				if (this.table.prev_page_url !== null) {
+					let self = this
+					this.param.page--
+					let params = (self.param.tahun_ajaran)? `&tahun_ajaran=${self.param.tahun_ajaran}`: ''
+					self.$http.get(`${self.url}`, {params: self.param})
+						.then(res => {
+							Vue.set(self.$data, 'table', res.data)
+						})
+				}
+				// this.url = this.table.prev_page_url
+				
 			},
 			next(){
-				this.url = this.table.next_page_url
-				let self = this
-				let params = (self.param.tahun_ajaran)? `?tahun_ajaran=${self.param.tahun_ajaran}`: ''
-				self.$http.get(`${self.url}${params}`)
-					.then(res => {
-						Vue.set(self.$data, 'table', res.data)
-					})
+				if (this.table.next_page_url !== null) {
+					let self = this
+					this.param.page++
+					// let params = (self.param.tahun_ajaran)? `&tahun_ajaran=${self.param.tahun_ajaran}`: ''
+					self.$http.get(`${self.url}`, {params: self.param})
+						.then(res => {
+							Vue.set(self.$data, 'table', res.data)
+						})
+						console.log("next")
+				}
+				// this.url = this.table.next_page_url
 			},
 			hapus(id){
 				let self = this
@@ -113,7 +121,7 @@
 						self.$http.delete(`${self.url}/${id}`)
 							.then(res => {
 								let params = (self.param.tahun_ajaran)? `?tahun_ajaran=${self.param.tahun_ajaran}`: ''
-								self.$http.get(`${self.url}${params}`)
+								self.$http.get(`${self.url}`, {params: self.param})
 									.then(res => {
 										Vue.set(self.$data, 'table', res.data)
 									})

@@ -29,10 +29,13 @@ class Genetika
     public $crossover;
     public $populasi;
 
-    public $individu;    //-->[$perkulihan, $jadwal]
-    public $fitness;
+    public $individu;    //-->[perkuliahan, dosen, matkul, kelas, hari, jam, ruangan, sks]
+    public $fitness;     //-->[arrrayOfFitnessIndividu]
+    public $induk;       //--> index dari individu
 
-    public $perkuliahan;
+    public $tabu_list;
+
+    public $perkuliahan; //-->pengampu
     protected $jam;
     protected $hari;
     public $ruangan_teori;
@@ -42,11 +45,14 @@ class Genetika
     public $ketentuan_matkul;
     public $ketentuan_ruangan;
 
+    public $individu_after_crossover;
+
     public function __construct($mutasi, $crossover, $populasi)
     {
         $this->mutasi = $mutasi;
         $this->crossover = $crossover;
         $this->populasi = $populasi;
+        $this->tabu_list = new TabuList;
     }
 
     public function __get($property) {
@@ -67,12 +73,13 @@ class Genetika
     {
         $this->perkuliahan = Pengampu::with('matkul')->whereHas('kelas.tahunAjaran', function($q){
             $q->aktif();
-        })->get();
+        })->limit(50)
+        ->get();
 
         $this->jam = Jam::get()->pluck('id');
         $this->hari = Hari::get()->pluck('id');
         $this->ruangan_teori = Ruangan::where('jenis', $this->TEORI)->get()->pluck('id');
-        $this->ruangan_praktikum = Ruangan::where('jenis', 'LABORATORIUM')->get()->pluck('id');
+        $this->ruangan_praktikum = Ruangan::where('jenis', $this->LABORATORIUM)->get()->pluck('id');
 
         $this->ketentuan_dosen = KD::whereHas('dosen.pengampu.kelas.tahunAjaran', function($q){
             $q->aktif();
@@ -93,24 +100,20 @@ class Genetika
 
                 switch ($kuliah->matkul->sks) {
                     case 1:
-                        $idx = mt_rand(1, $this->jam->count() - 1);
-                        $jam = $this->jam[$idx];
+                        $idx = mt_rand(0, $this->jam->count() - 1);
+                        $jam = $this->jam[$idx];//$idx;
                         break;
                     case 2:
-                        $idx = mt_rand(1, ($this->jam->count() - 1) - 1);
-                        $jam = $this->jam[$idx];
+                        $idx = mt_rand(0, ($this->jam->count() - 1) - 1);
+                        $jam = $this->jam[$idx];//$idx;
                         break;
                     case 3:
-                        $idx = mt_rand(1, ($this->jam->count() - 1) - 2);
-                        $jam = $this->jam[$idx];
+                        $idx = mt_rand(0, ($this->jam->count() - 1) - 2);
+                        $jam = $this->jam[$idx];//$idx;
                         break;
                     case 4:
-                        $idx = mt_rand(1, ($this->jam->count() - 1) - 3);
-                        $jam = $this->jam[$idx];
-                        break;
-                    default:
-                        $idx = mt_rand(1, ($this->jam->count() - 1) - 3);
-                        $jam = $this->jam[$idx];
+                        $idx = mt_rand(0, ($this->jam->count() - 1) - 3);
+                        $jam = $this->jam[$idx];//$idx;
                         break;
                 }
 
@@ -124,12 +127,13 @@ class Genetika
                         break;
                 }
 
-                return [
+                return (Object) [
                     'perkuliahan' => $kuliah->id,
                     'dosen' => $kuliah->dosen_id,
                     'matkul' => $kuliah->matkul_id,
                     'kelas' => $kuliah->kelas_id,
                     'sks' => $kuliah->matkul->sks,
+                    'jenis' => $kuliah->matkul->jenis,
 
                     'hari' => $this->hari->random(),
                     'jam' => $jam,
@@ -139,6 +143,7 @@ class Genetika
         });
 
         $this->individu = $indv->map(function($item){
+            $this->tabu_list->addTabulist($item);
             return $item->mapInto(Individu::class);
         });
     }
@@ -238,7 +243,6 @@ class Genetika
                     }
                 });
                 #END KETENTUAN RUANGAN
-
             });
 
             return [
@@ -253,7 +257,147 @@ class Genetika
 
     public function Seleksi()
     {
-        // $this->fitness->max
+        $jumlah = 0;
+        $rank = [];
+        $this->fitness->map(function($fitnessA, $i) use(&$jumlah, &$rank){
+            $rank[$i] = 1;
+            $this->fitness->each(function($fitnessB, $j) use(&$jumlah, &$rank, $fitnessA, $i){
+                if ($fitnessA['fitness'] > $fitnessB['fitness']) {
+                    $rank[$i] += 1;
+                }
+            });
+            $jumlah += $rank[$i];
+        });
+
+        $induk = [];
+        $cek_target = [];
+        $this->fitness->map(function($fitness, $i) use($jumlah, $rank, &$induk, &$cek_target){
+            $target = mt_rand(0, $jumlah - 1);
+            $cek = 0;
+            for ($j=0; $j < count($rank); $j++) { 
+                $cek += $rank[$j];
+                $cek_target[$j] = [$cek, $target];
+                if (intval($cek) >= intval($target)) {
+                    $induk[$i] = $j;
+                    break;
+                }
+            }
+        });
+        $this->induk = collect($induk);
+        return $induk;
+    }
+
+    public function CrossOver()
+    {
+        $individu_baru = [[]];
+        // $pro = [];
+
+        for($i=0; $i < $this->populasi; $i += 2){
+            $b = 0;
+
+            $probabilitas_crossover = mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax();
+            // $pro[$i] = $probabilitas_crossover;
+
+            if (floatval($probabilitas_crossover) < floatval($this->crossover)) {
+                $a = mt_rand(0, $this->perkuliahan->count() - 2);
+                
+                while ($b <= $a) {
+                    $b = mt_rand(0, $this->perkuliahan->count() - 1);
+                }
+
+                //awal ke titik 1
+                for ($j=0; $j < $a; $j++) { 
+                    $individu_baru[$i][$j]     = $this->individu[$this->induk[$i]][$j];
+                    $individu_baru[$i + 1][$j] = $this->individu[$this->induk[$i + 1]][$j];
+                }
+
+                //titik 1 ke 2
+                for ($j=$a; $j < $b; $j++) { 
+                    $individu_baru[$i][$j]     = $this->individu[$this->induk[$i + 1]][$j];
+                    $individu_baru[$i + 1][$j] = $this->individu[$this->induk[$i]][$j];
+                }
+
+                // //titik 2 ke akhir
+                for ($j=$b; $j < $this->perkuliahan->count(); $j++) { 
+                    $individu_baru[$i][$j]     = $this->individu[$this->induk[$i]][$j];
+                    $individu_baru[$i + 1][$j] = $this->individu[$this->induk[$i + 1]][$j];
+                }
+
+            } else {
+                for ($j=0; $j < $this->perkuliahan->count(); $j++) { 
+                    $individu_baru[$i][$j]   = $this->individu[$this->induk[$i]][$j];
+                    $individu_baru[$i+1][$j]   = $this->individu[$this->induk[$i+1]][$j];
+                }
+            }
+        }
+
+
+        $this->individu_after_crossover = $individu_baru;
+        return $individu_baru;
+        // return [$this->tabu_list->cekInTabulist($individu_baru), $this->tabu_list->tabu_individu];
+        // return collect($individu_baru)->map(function($item){
+        //     return $result = $this->tabu_list->cekInTabulist($item);
+        //     // $this->tabu_list->addTabulist(collect($item));
+        //     // return collect($item)->mapInto(Individu::class);
+        // });
+
+        // // $this->individu = 
+
+        // return [
+        //     'idx_induk' => $this->induk, 
+        //     'individu_baru' =>$individu_baru, 
+        //     'individu' => $this->individu
+        // ];
+    }
+
+    public function Mutasi()
+    {
+        $probabilitas_mutasi = mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax();
+
+        for ($i=0; $i < $this->populasi; $i++) { 
+            if ($probabilitas_mutasi < $this->mutasi) {
+
+                $idx_kromosom = mt_rand(0, $this->perkuliahan->count() - 1);
+
+                $sks = $this->perkuliahan[$idx_kromosom]->matkul->sks;
+
+                switch ($sks) {
+                    case 1:
+                        $idx = mt_rand(0, $this->jam->count() - 1);
+                        $jam = $this->jam[$idx];
+                        break;
+                    case 2:
+                        $idx = mt_rand(0, ($this->jam->count() - 1) - 1);
+                        $jam = $this->jam[$idx];
+                        break;
+                    case 3:
+                        $idx = mt_rand(0, ($this->jam->count() - 1) - 2);
+                        $jam = $this->jam[$idx];
+                        break;
+                    case 4:
+                        $idx = mt_rand(0, ($this->jam->count() - 1) - 3);
+                        $jam = $this->jam[$idx];
+                        break;
+
+                }
+
+                //Pergantian Hari
+                $this->individu[$i][$idx_kromosom]->hari = $this->hari->random();
+
+                //Pergantian Ruangan
+                $jenis_matkul = $this->individu[$i][$idx_kromosom]->jenis;
+                switch ($jenis_matkul) {
+                    case $this->TEORI:
+                        $this->individu[$i][$idx_kromosom]->ruangan = $this->ruangan_teori->random();
+                        break;
+                    case $this->PRAKTIKUM:
+                        $this->individu[$i][$idx_kromosom]->ruangan = $this->ruangan_praktikum->random();
+                        break;
+                }
+            }
+        }
+
+        // return $sks;
     }
 
 }

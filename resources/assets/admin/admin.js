@@ -7,7 +7,7 @@ import {base_url} from './config/env'
 
 import VueRouter from 'vue-router'
 import router from './router/router.js'
-// import store from './store/index.js'
+import store from './store/index.js'
 Vue.use(VueRouter)
 
 import Datatable from 'vue2-datatable-component'
@@ -58,6 +58,6 @@ const app = new Vue({
     		require(['./components/App'], resolve)
     	}
     },
-    // store,
+    store,
     router
 });

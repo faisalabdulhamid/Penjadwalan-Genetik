@@ -31,5 +31,6 @@ Route::resource('ketentuan-matkul', 'KetentuanMatkulController');
 Route::group(['prefix'=>'penjadwalan'], function(){
     Route::get('/', 'PenjadwalanController@index')->name('penjadwalan.index');
     Route::post('/genetika', 'PenjadwalanController@penjadwalan')->name('penjadwalan.post');
-    Route::get('/contoh', 'PenjadwalanController@contoh');
+    
+    Route::get('/getIndividu', 'PenjadwalanController@getIndividu');
 });

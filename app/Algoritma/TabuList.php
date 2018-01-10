@@ -27,10 +27,10 @@ class TabuList
 
 	public function cekInTabulist($individu)
 	{
-		$result = false;
-		for ($i=0; $i < $this->; $i++) { 
-			# code...
-		}
+		// $result = false;
+		// for ($i=0; $i < $this->; $i++) { 
+		// 	# code...
+		// }
 		// $this->tabu_individu->each(function($pop, $i) use ($individu, &$result){
 		// 	if ($result) {
 		// 		return false;
@@ -56,6 +56,6 @@ class TabuList
 		// 	});
 			
 		// });
-		return $individu;
+		// return $individu;
 	}
 }

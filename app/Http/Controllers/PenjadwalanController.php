@@ -17,81 +17,74 @@ use Illuminate\Http\Request;
 
 class PenjadwalanController extends Controller
 {
-    
+
     public function penjadwalan(Request $request){
         $this->validate($request, [
             'semester' => 'required',
-            'tahun_akademik' => 'required',
+            'tingkat' => 'required',
             'populasi' => 'required',
             'crossover' => 'required',
             'mutasi' => 'required',
             'generasi' => 'required',
         ]);
-        $semester = $request->semester;
-        $tahun_akademik = $request->tahun_akademik;
-        $populasi = $request->populasi;
-        $crossover = $request->crossover;
-        $mutasi = $request->mutasi;
-        $generasi = $request->generasi;
-        //params($jenis_semester, $tahun_akademik, $populasi, $crossOver, $mutasi, $kode_jumat, $range_jumat, $kode_dhuhur)
-        $genetika = new Genetika();
 
-        // return $genetika;
-    }
+        $fitness = [];
+        $induk = [];
+        $nilai_max_fitness_iterasi = [];
 
-    public function contoh()
-    {
-        $semester = 2;
-        $populasi = 10;
-        $crossover = 0.7;
-        $mutasi = 0.4;
-        $generasi = 100; //pengulangan
+        $genetika = new Genetika;//($mutasi, $crossover, $populasi, $semester, json_decode($tingkat));
 
-        $genetika = new Genetika($mutasi, $crossover, $populasi);
+        $genetika->mutasi = $request->mutasi;
+        $genetika->crossover = $request->crossover;
+        $genetika->populasi = $request->populasi;
+        $genetika->semester = $request->semester;
+        $genetika->tingkat = json_decode($request->tingkat);
+
         
-        $fit = [];
-        $fitness_1 = '';
-        $found = false;
-
         $genetika->Pengkodean();
         $genetika->Inisialisasi();
-        $genetika->EvaluasiFitness();
-        $genetika->Seleksi();
-        return($genetika->CrossOver());
-        // $genetika->Mutasi();
-        return ($genetika->tabu_list->tabu_individu);
-        dd($genetika->tabu_list);
+        $penalty[] = $genetika->EvaluasiFitness();
+        $fitness_max[] = $genetika->fitness->max('fitness');
 
-        for ($i=0; $i < $generasi; $i++) { 
-            
-            $genetika->EvaluasiFitness();
-            $genetika->Seleksi();
+
+        $found = false;
+        for ($i=0; $i < $request->generasi; $i++) { 
+            $induk[] = $genetika->Seleksi();       // Penetuan Induk Indv
             $genetika->CrossOver();
             $genetika->Mutasi();
-            $genetika->EvaluasiFitness();
+            
+            $penalty[] = $genetika->EvaluasiFitness();  // Nilai Fitness
+            $fitness_max[] = $genetika->fitness->max('fitness');  // Nilai Fitness
 
-            $fit[] = $genetika->fitness->max('fitness');
-            $fitness = $genetika->fitness;
 
-            if ($fitness->max('fitness') === 1) {
+            // $nilai_max_fitness_iterasi[] = $genetika->fitness->max('fitness');
+
+            if ($genetika->fitness->max('fitness') === 1) {
                 $found = true;
-                $fitness_1 = [
-                    $i,
-                    $fitness
-                ];
             }
 
             if($found){break;}
         }
 
+        $title = '';
+        $message = 'Data Tidak Ditemukan';
+
         if ($found) {
-            return [
-                $genetika->tabu_list,
-                $fitness_1,
-                $fit];
-        }else{
-            return $fit;
+            $title = '';
+            $message = 'Data Ditemukan';
         }
+
+        return response()->json([
+            // 'hah' => $genetika->
+            'max' => $fitness_max,
+            'induk' => $induk,
+            'penalty' => $penalty,
+            // 'message' => $message,
+            // 'fitness' => $fitness,
+            // 'max_fitness' => $nilai_max_fitness_iterasi
+        ], 201);
+
+
     }
 
 }

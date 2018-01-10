@@ -23,8 +23,11 @@
     "vuex": "^3.0.1"
   },
   "dependencies": {
+    "chart.js": "^2.7.1",
     "mockjs": "^1.0.1-beta3",
     "moment": "^2.20.1",
+    "vue-full-loading": "^1.0.3",
+    "vue-json-tree-view": "^2.1.1",
     "vue2-datatable-component": "^2.1.24"
   }
 }

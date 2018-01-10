@@ -28,6 +28,8 @@ class Genetika
     public $mutasi;
     public $crossover;
     public $populasi;
+    public $tingkat;
+    public $semester;
 
     public $individu;    //-->[perkuliahan, dosen, matkul, kelas, hari, jam, ruangan, sks]
     public $fitness;     //-->[arrrayOfFitnessIndividu]
@@ -47,11 +49,13 @@ class Genetika
 
     public $individu_after_crossover;
 
-    public function __construct($mutasi, $crossover, $populasi)
+    public function __construct()//$mutasi, $crossover, $populasi, $semester, $tingkat)
     {
-        $this->mutasi = $mutasi;
-        $this->crossover = $crossover;
-        $this->populasi = $populasi;
+        // $this->mutasi = $mutasi;
+        // $this->crossover = $crossover;
+        // $this->populasi = $populasi;
+        // $this->semester = $semester;
+        // $this->tingkat = $tingkat;
         $this->tabu_list = new TabuList;
     }
 
@@ -73,7 +77,11 @@ class Genetika
     {
         $this->perkuliahan = Pengampu::with('matkul')->whereHas('kelas.tahunAjaran', function($q){
             $q->aktif();
-        })->limit(50)
+        })->whereHas('matkul', function($query){
+            $query->whereIn('tingkat', $this->tingkat)
+                ->where('semester', $this->semester);
+        })
+        // ->limit(10)
         ->get();
 
         $this->jam = Jam::get()->pluck('id');
@@ -152,62 +160,93 @@ class Genetika
     {
         
         $fitness = $this->individu->map(function($item, $key){
-            
             $penalty = 0;
-
+            
             $item->each(function($val, $i) use($item, &$penalty){          //---->indv1
                 $item->each(function($val2, $j) use($i, $val, &$penalty) { //BENTROK RUANGAN, DOSEN
                     if ($i !== $j) {
                         
                         # BENTROK RUANGAN
                         // bentrok 1.hari, 2.jam, 3.ruangan
-                        if ($val->hari === $val2->hari && $val->jam === $val2->jam && $val->ruangan === $val2->ruangan) {
+                        if (
+                            $val->hari === $val2->hari && 
+                            $val->jam === $val2->jam && 
+                            $val->ruangan === $val2->ruangan
+                        ) {
                             $penalty += 1;
                         }
 
-                        //ketika 2 sks
-                        if ($val->sks === 2) {
-                            if ($val->jam + 1 === $val2->jam && $val->hari === $val2->hari && $val->ruangan === $val2->ruangan) {
+                        // //ketika 2 sks
+                        if ($val->sks >= 2) {
+                            if (
+                                ($val->jam + 1) === $val2->jam && 
+                                $val->hari === $val2->hari && 
+                                $val->ruangan === $val2->ruangan
+                            ) {
+                                $penalty += 1;
+                            }
+                        }
+
+                        // //ketika 3 sks
+                        if ($val->sks >= 3) {
+                            if (
+                                ($val->jam + 2) === $val2->jam && 
+                                $val->hari === $val2->hari && 
+                                $val->ruangan === $val2->ruangan
+                            ) {
+                                $penalty += 1;
+                            }
+                        }
+
+                        // //ketika 4 sks
+                        if ($val->sks >= 4) {
+                            if (
+                                ($val->jam + 3) === $val2->jam && 
+                                $val->hari === $val2->hari && 
+                                $val->ruangan === $val2->ruangan
+                            ) {
+                                $penalty += 1;
+                            }
+                        }
+
+                        // #BENTROK DOSEN
+                        if ( 
+                            $val->jam === $val2->jam && 
+                            $val->hari === $val2->hari &&
+                            $val->dosen === $val2->dosen
+                        ) {
+                            $penalty += 1;
+                        }
+
+                        // //ketika 2 sks
+                        if ($val->sks >= 2) {
+                            if (
+                                ($val->jam + 1) === $val2->jam && 
+                                $val->hari === $val2->hari && 
+                                $val->dosen === $val2->dosen
+                            ) {
                                 $penalty += 1;
                             }
                         }
 
                         //ketika 3 sks
-                        if ($val->sks === 3) {
-                            if ($val->jam + 2 === $val2->jam && $val->hari === $val2->hari && $val->ruangan === $val2->ruangan) {
+                        if ($val->sks >= 3) {
+                            if (
+                                ($val->jam + 2) === $val2->jam && 
+                                $val->hari === $val2->hari && 
+                                $val->dosen === $val2->dosen
+                            ) {
                                 $penalty += 1;
                             }
                         }
 
                         //ketika 4 sks
-                        if ($val->sks === 4) {
-                            if ($val->jam + 3 === $val2->jam && $val->hari === $val2->hari && $val->ruangan === $val2->ruangan) {
-                                $penalty += 1;
-                            }
-                        }
-
-                        #BENTROK DOSEN
-                        if ($val->hari === $val2->hari && $val->jam === $val2->jam && $val->dosen === $val2->dosen) {
-                            $penalty += 1;
-                        }
-
-                        //ketika 2 sks
-                        if ($val->sks === 2) {
-                            if ($val->jam + 1 === $val2->jam && $val->hari === $val2->hari && $val->dosen === $val2->dosen) {
-                                $penalty += 1;
-                            }
-                        }
-
-                        //ketika 3 sks
-                        if ($val->sks === 3) {
-                            if ($val->jam + 2 === $val2->jam && $val->hari === $val2->hari && $val->dosen === $val2->dosen) {
-                                $penalty += 1;
-                            }
-                        }
-
-                        //ketika 4 sks
-                        if ($val->sks === 4) {
-                            if ($val->jam + 3 === $val2->jam && $val->hari === $val2->hari && $val->dosen === $val2->dosen) {
+                        if ($val->sks >= 4) {
+                            if (
+                                ($val->jam + 3) === $val2->jam && 
+                                $val->hari === $val2->hari && 
+                                $val->dosen === $val2->dosen
+                            ) {
                                 $penalty += 1;
                             }
                         }
@@ -218,8 +257,13 @@ class Genetika
 
                 #KETENTUAN DOSEN
                 $this->ketentuan_dosen->each(function($dosen, $d) use($val, &$penalty){
-                    if($val->dosen === $dosen->dosen && $val->hari === $dosen->hari && $val->jam === $dosen->jam){
-                        $penalty += 1;
+                    if ($val->dosen === $dosen->dosen) {
+                        if(
+                            $val->hari === $dosen->hari && 
+                            $val->jam === $dosen->jam
+                        ){
+                            $penalty += 1;
+                        }
                     }
                 });
                 #END KETENTUAN DOSEN
@@ -253,37 +297,89 @@ class Genetika
 
         $this->fitness = $fitness;
         return $fitness;
+        
+        
+
+        //-----COba
+        // $penalty = 0;
+        // for ($indv=0; $indv < $this->populasi; $indv++) { 
+        //     for ($i=0; $i < $this->individu->count(); $i++) {
+        //         // $genetika->individu[0][0]->perkuliahan;
+        //         // 
+        //         $sks = $this->individu[$indv][$i]->sks;
+
+        //         $jam_a = $this->individu[$indv][$i]->jam;
+        //         $hari_a = $this->individu[$indv][$i]->hari;
+        //         $ruangan_a = $this->individu[$indv][$i]->ruangan;
+        //         $dosen_a = $this->individu[$indv][$i]->dosen;
+
+        //         $perkuliahan = $this->individu[$indv][$i]->perkuliahan;
+        //         for ($j=0; $j < $this->individu->count(); $j++) { 
+        //             $jam_b = $this->individu[$indv][$j]->jam;
+        //             $hari_b = $this->individu[$indv][$j]->hari;
+        //             $ruangan_b = $this->individu[$indv][$j]->ruangan;
+        //             $dosen_b = $this->individu[$indv][$j]->dosen;
+
+        //             if ($i === $j) 
+        //                 continue;
+
+        //             if ($jam_a == $jam_b &&
+        //                 $hari_a == $hari_b &&
+        //                 $ruangan_a == $ruangan_b
+        //             ) {
+        //                 $penalty += 1;
+        //             }
+
+        //             //Sks + 
+        //         }
+        //     }
+        // }
+
+        // return (1/1+$penalty);
     }
 
     public function Seleksi()
     {
         $jumlah = 0;
         $rank = [];
-        $this->fitness->map(function($fitnessA, $i) use(&$jumlah, &$rank){
+        $this->fitness->map(function($fitnessA, $i) 
+        use(&$jumlah, &$rank){
             $rank[$i] = 1;
-            $this->fitness->each(function($fitnessB, $j) use(&$jumlah, &$rank, $fitnessA, $i){
+
+            $this->fitness->each(function($fitnessB, $j) 
+            use(&$jumlah, &$rank, $fitnessA, $i){
+
                 if ($fitnessA['fitness'] > $fitnessB['fitness']) {
                     $rank[$i] += 1;
                 }
+
             });
+
             $jumlah += $rank[$i];
         });
 
         $induk = [];
-        $cek_target = [];
-        $this->fitness->map(function($fitness, $i) use($jumlah, $rank, &$induk, &$cek_target){
+
+        $this->fitness->map(function($fitness, $i) 
+        use($jumlah, $rank, &$induk){
+            
             $target = mt_rand(0, $jumlah - 1);
+
             $cek = 0;
-            for ($j=0; $j < count($rank); $j++) { 
+
+            for ($j=0; $j < count($rank); $j++) {
+
                 $cek += $rank[$j];
-                $cek_target[$j] = [$cek, $target];
+
                 if (intval($cek) >= intval($target)) {
                     $induk[$i] = $j;
                     break;
                 }
             }
         });
-        $this->induk = collect($induk);
+
+        $this->induk = collect($induk);//Array index indvidu calon induk
+
         return $induk;
     }
 
@@ -296,9 +392,9 @@ class Genetika
             $b = 0;
 
             $probabilitas_crossover = mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax();
-            // $pro[$i] = $probabilitas_crossover;
 
-            if (floatval($probabilitas_crossover) < floatval($this->crossover)) {
+            if (floatval($probabilitas_crossover) < floatval($this->crossover)) 
+            {
                 $a = mt_rand(0, $this->perkuliahan->count() - 2);
                 
                 while ($b <= $a) {
@@ -323,24 +419,29 @@ class Genetika
                     $individu_baru[$i + 1][$j] = $this->individu[$this->induk[$i + 1]][$j];
                 }
 
-            } else {
+            } 
+            else 
+            {
                 for ($j=0; $j < $this->perkuliahan->count(); $j++) { 
-                    $individu_baru[$i][$j]   = $this->individu[$this->induk[$i]][$j];
-                    $individu_baru[$i+1][$j]   = $this->individu[$this->induk[$i+1]][$j];
+                    $individu_baru[$i][$j]     = $this->individu[$this->induk[$i]][$j];
+                    $individu_baru[$i + 1][$j] = $this->individu[$this->induk[$i + 1]][$j];
                 }
             }
         }
 
 
-        $this->individu_after_crossover = $individu_baru;
-        return $individu_baru;
+        // $this->individu = collect($individu_baru);
+        // $this->individu_after_crossover = collect($individu_baru);
         // return [$this->tabu_list->cekInTabulist($individu_baru), $this->tabu_list->tabu_individu];
-        // return collect($individu_baru)->map(function($item){
-        //     return $result = $this->tabu_list->cekInTabulist($item);
-        //     // $this->tabu_list->addTabulist(collect($item));
-        //     // return collect($item)->mapInto(Individu::class);
-        // });
+        $collection_indv_baru = collect($individu_baru)->map(function($item){
+            // return $result = $this->tabu_list->cekInTabulist($item);
+            // $this->tabu_list->addTabulist(collect($item));
+            return collect($item)->mapInto(Individu::class);
+        });
 
+        $this->individu = $collection_indv_baru;
+
+        return $collection_indv_baru;
         // // $this->individu = 
 
         // return [
@@ -354,7 +455,8 @@ class Genetika
     {
         $probabilitas_mutasi = mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax();
 
-        for ($i=0; $i < $this->populasi; $i++) { 
+        for ($i=0; $i < $this->populasi; $i++) {
+
             if ($probabilitas_mutasi < $this->mutasi) {
 
                 $idx_kromosom = mt_rand(0, $this->perkuliahan->count() - 1);
